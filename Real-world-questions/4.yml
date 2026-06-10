@@ -1,0 +1,20 @@
+name : Practice-YAML
+
+on : 
+  push : 
+    branches :
+      - main 
+
+  pull_request :
+    branches : 
+      - main
+
+jobs :
+  build : 
+    runs-on : ubuntu-latest
+  steps : 
+    - name : checkout code 
+      uses : actions/checkout@v2
+    - run : ls -la 
+    - run : pwd 
+    
