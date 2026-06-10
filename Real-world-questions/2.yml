@@ -1,1 +1,17 @@
 name : practice-YAML
+
+jobs :
+  build : 
+    runs-on : ubuntu-latest
+    steps :
+      - run : echo "This is a build job"
+  
+  test :
+    runs-on : ubuntu-latest
+    steps :
+      - run : echo "This is a test job"
+      
+  deploy :
+    runs-on : ubuntu_latest
+    steps: 
+     - run : echo "This is a deploy job"
