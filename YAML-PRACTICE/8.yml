@@ -1,0 +1,13 @@
+restaurant : 
+    - item1 : 
+        name : "Pizza"
+        price : 250
+        Vegetarian : "True"
+    - item2 :
+        name : "Burger"
+        price : 150
+        Vegetarian : "True"
+    - items3 :
+        name : "Mutton"
+        price : 500
+        Vegetarian : "False"

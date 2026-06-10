@@ -1,0 +1,20 @@
+company:
+    name: "TechCorp"
+    employees:
+      - name : "vishal"
+        age : 21
+        role : "frontend developer"
+      - name : "priya"
+        age : 28
+        role : "backend developer"
+      - name: "raj"
+        age : 35
+        role : "project manager"
+        
+locations:
+    - city: "Mumbai"
+      country: "India"
+    - city: "Delhi"
+      country: "India"
+    - city: "Banglore"
+      country: "India"

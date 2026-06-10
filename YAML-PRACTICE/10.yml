@@ -1,0 +1,13 @@
+mobile : 
+  - brand : "Apple"
+    model : "iphone 15"
+    specifications :
+      storage : "256GB"
+      RAM : "8GB"
+      camera : "48MP"
+      available_colors :
+        - "Black"
+        - "White"
+        - "Blue"
+    price : 79999
+  

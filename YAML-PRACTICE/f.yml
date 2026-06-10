@@ -1,0 +1,24 @@
+name: vishal
+age : 21
+#nested objects
+server :
+  name : "clouddeployx"
+  capacity : 99GB
+Database :
+  name : "clouddeployxdb"
+  type : "SQL"
+  version : "5.7"
+# it is a list arrays
+services :
+  - name : "webApp"
+    port : 8080
+  - name : "api"
+    port : 3000
+
+
+    server:
+      name: webserver
+      port: 8080
+    details:
+      status: running
+      type: production

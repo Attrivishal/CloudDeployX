@@ -1,0 +1,5 @@
+product :
+    name : "Laptop"
+    price : 55000
+    product_id : "101"
+    in_stock : true

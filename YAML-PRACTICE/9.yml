@@ -1,0 +1,10 @@
+school :
+    name : "City High school"
+    total_students : 500
+    Grades_offered : [9,10,11,12]
+    teachers :
+      - name : "Mr vishal"
+        subject : "CLOUD"
+      - name : "Ms priya"
+        subject : "Linux"
+   

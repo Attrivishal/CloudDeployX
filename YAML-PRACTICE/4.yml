@@ -1,0 +1,6 @@
+company : 
+    name : "Google"
+    address :
+        street : "East patel nagar"
+        city : "New Delhi"
+        state : "Delhi"

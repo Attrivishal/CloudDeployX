@@ -1,0 +1,7 @@
+car :
+    brand : "Toyota"
+    model : "camry"
+    Engine_details :
+    type : "V6"
+    Horsepower : 300
+    Fuel_type : "Petrol"

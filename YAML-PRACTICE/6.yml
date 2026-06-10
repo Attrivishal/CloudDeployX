@@ -1,0 +1,9 @@
+exams_score :
+  - math : 
+      score : 85
+  - science :
+      score : 90
+  - English :
+      score : 78
+  - History :
+      score : 88

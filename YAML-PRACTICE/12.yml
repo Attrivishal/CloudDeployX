@@ -1,0 +1,12 @@
+social_media :
+    username : "tech_guru"
+    post ID : 456
+    content : "Learning YAML is fun!"
+    Likes : 120
+    comments :
+      - username : "vishal"
+        comment text : "Totally agree!"
+        Timestamp : "2024-06-01 10:00:00"
+      - username : "priya"
+        comment text : "YAML is so useful for configuration files."
+        Timestamp : "2024-06-01 11:00:00"
