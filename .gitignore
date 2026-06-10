@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build and coverage output
+dist/
+build/
+coverage/
+.nyc_output/
+
+# Runtime and cache files
+.cache/
+.tmp/
+tmp/
+temp/
+*.pid
+*.seed
+
+# Devbox local state
+.devbox/
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Docker/local compose overrides
+docker-compose.override.yml
+compose.override.yml
+
+# Python cache files used by practice scripts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
