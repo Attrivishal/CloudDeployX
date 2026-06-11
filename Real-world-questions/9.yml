@@ -1,0 +1,18 @@
+name : Practice-YAML
+
+on :
+  push : 
+    branches :
+      - main 
+
+jobs : 
+  setup :
+    runs-on : ubuntu-latest
+    steps :
+      - name : "Setting up environment"
+        run : echo "Setting up environment for the workflow"
+  cleanup : 
+    runs-on : ubuntu-latest
+    steps : 
+      - name : "Cleaning up environment"
+        run : echo "Cleaning up environment after workflow execution"
