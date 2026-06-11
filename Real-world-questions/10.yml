@@ -1,0 +1,25 @@
+name : Practice-YAML
+
+on :
+  pull_request :
+    branches :
+      - main
+
+jobs : 
+  frontend :
+    runs-on : ubuntu-latest
+    steps :
+    - name : "Checkout code"
+      uses : actions/checkout@v4
+
+    - name : "Install dependencies in ./frontend"
+      run : npm install
+      working-directory : ./frontend
+
+    - name : "Run tests in ./frontend"
+      run : npm test
+      working-directory : ./frontend
+
+    - name : "Build project in ./frontend"
+      run : npm run build 
+      working-directory : ./frontend
