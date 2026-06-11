@@ -1,0 +1,22 @@
+name : Practice-YAML
+
+on : 
+  push : 
+    branches :
+      - main
+
+jobs : 
+  python_test :
+    runs-on : ubuntu-latest
+    steps :
+
+    - name : "Setup python version 3.11"
+      uses : action/setup-python@v4
+      with : 
+       python-version : "3.11"
+
+    - name : "check python version"
+      run : python --version
+
+    - name : "Runs pip version"
+      run : pip --version
