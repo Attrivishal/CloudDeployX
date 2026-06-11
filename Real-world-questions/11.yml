@@ -1,0 +1,19 @@
+name : Practice-YAML
+
+on : 
+  push :
+    branches : 
+      - main 
+
+jobs : 
+  environment :
+    runs-on : ubuntu-latest
+    steps : 
+      - name : "Setting up environment"
+        env :
+          APP_NAME : "MyApp"
+          VERSION : "1.0.0"
+        run : echo "Setting up environment for $APP_NAME version $VERSION"
+
+      - name : "Prints github SHA"
+        run : echo $GITHUB_SHA
