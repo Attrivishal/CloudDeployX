@@ -1,0 +1,17 @@
+name : Practice-YAML
+
+on : 
+  push :
+    branches :
+      - main
+
+jobs :
+  system-info : 
+    runs-on : ubuntu-latest 
+    steps: 
+      - name : "Some Information related to system "
+        run : date
+      - name : "Current working directory"
+        run : pwd
+      - name : "List of files in current directory"
+        run : ls -la
