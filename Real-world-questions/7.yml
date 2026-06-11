@@ -1,0 +1,11 @@
+name : Practice-YAML
+#This workflow is triggered manually using workflow_dispatch event. It has a single job named greeting that runs on the latest version of Ubuntu. The job consists of one step that prints "Hello github actions" to the console.
+on : 
+  workflow_dispatch 
+
+jobs :
+  greeting : 
+    runs-on : ubuntu-latest
+    steps : 
+      - name : "Print Hello github actions"
+        run : echo "Hello github actions"
