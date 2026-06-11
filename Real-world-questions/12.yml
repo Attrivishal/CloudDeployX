@@ -1,0 +1,21 @@
+name : Practice-YAML
+
+on : 
+  push :
+
+jobs :
+  conditional_steps :
+    runs-on : ubuntu-latest
+    steps :
+      - name : "Step 1 is always running!"
+        run : echo "Step 1 always runs"
+      
+      - name : "Runs only on main branch"
+        if: github.ref == "ref/heads/main"
+        run : echo "This is main branch"
+
+      - name : "Runs only on dev branch"
+        if: github.ref == "refs/heads/dev"
+        run : echo "This is dev branch"  
+   
+
