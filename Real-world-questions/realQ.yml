@@ -1,0 +1,64 @@
+name : Practice-YAML
+
+on :
+  push : 
+    branches : 
+      - main 
+  pull_request :
+    branches : 
+      - main
+
+jobs : 
+
+  lint :
+    runs-on : ubuntu-latest 
+    steps :
+      - name : checkout code
+        uses : actions/checkout@v4
+
+      - name : setup Node.Js 
+        uses : actions/setup-node@v4
+        with :
+          node-version : "18"
+
+      - name : "Install all dependencies"
+        run : npm install
+      
+      - name : "Run lint"
+        run : npm run lint 
+
+  test : 
+    runs-on : ubuntu-latest
+    needs : lint
+    steps :
+      - name : checkout code
+        uses : actions/checkout@v4
+       
+      - name : Setup Node.Js
+        uses : actions/setup-node@v4
+        with : 
+          node-version : "18"
+      
+      - name : "Install all dependencies."
+        run : npm install
+      
+      - name : "Testing the job."
+        run : npm test
+  
+  build:
+    runs-on : ubuntu-latest
+    needs : test
+    steps :
+      - name : checkout code
+        uses : actions/checkout@v4
+      
+      - name : setup Node.Js
+        uses : actions/setup-node@v4
+        with : 
+          node-version : "18"
+
+      - name : "Install all dependencies."
+        run : npm install
+
+      - name : "Build the job"
+        run : npm run build  
