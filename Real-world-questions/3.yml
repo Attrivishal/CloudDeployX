@@ -1,15 +1,7 @@
 name : practice-YAML
 
-on :
-  pull_request :
-    branches : 
-      - main
-  push : 
-    branches :
-       - main
-
-
-# if both have same branches 
-  on : 
-   - pull_request
-   - push 
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
