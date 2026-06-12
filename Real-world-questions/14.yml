@@ -1,0 +1,27 @@
+name : Practice-YAML
+
+on : 
+  workflow-dispatch 
+
+jobs : 
+  build : 
+    runs-on : ubuntu-latest 
+    steps:
+      - name : "Here our building process is going on."
+        run : echo "Building..."
+      
+  test :
+    runs-on : ubuntu-latest
+    needs : build
+    steps :
+      - name : "Here our test process is going on."
+        run : echo "Testing..."
+    
+  deploy :
+    runs-on : ubuntu-latest 
+    needs : test
+    steps : 
+      - name : "Here our deployy process is going on."
+        run : echo "Deploying..."
+        
+  
