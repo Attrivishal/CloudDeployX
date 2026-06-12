@@ -1,6 +1,4 @@
-#Create YAML for a student with:
-
-name : "rahul"
-age : 22
-Grade : "A"
-Passed : "True"
+name: Rahul
+age: 22
+grade: A
+passed: true
