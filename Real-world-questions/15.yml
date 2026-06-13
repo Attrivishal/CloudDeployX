@@ -1,0 +1,21 @@
+name : Practice-YAML
+ 
+on : 
+  push :
+    branches :
+      - main 
+
+jobs : 
+  test : 
+    runs-on : ubuntu-latest 
+    strategy : 
+      matrix :
+        node-version : [16,18,20]
+
+    steps :
+      - uses : actions/setup-node@v4
+        with : 
+          node-version : ${{matrix.node-version}}
+      
+      - name : Print node version
+        run : node --version
