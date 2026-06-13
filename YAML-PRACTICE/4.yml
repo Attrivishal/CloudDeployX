@@ -1,6 +1,6 @@
-company : 
-    name : "Google"
-    address :
-        street : "East patel nagar"
-        city : "New Delhi"
-        state : "Delhi"
+company:
+  name: Google
+  address:
+    street: "1600 Amphitheatre Parkway"    
+    city: "Mountain View"
+    country: "USA"
