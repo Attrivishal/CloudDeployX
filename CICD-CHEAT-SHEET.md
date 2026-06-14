@@ -465,12 +465,120 @@ GitHub Repo → Settings → Secrets and variables → Actions → New repositor
 
 ---
 
-## 📋 Complete Real-World Examples
+## 🌍 Real-World Production Pipelines
 
-### Example 1: Node.js CI on Push to Main
+> These are **real production-ready pipelines** used by companies. Copy, customize, and ship!
+
+| # | Example | Tech Stack | Deploy Target |
+|---|---|---|---|
+| 1 | React + AWS | React, Node.js | S3 + CloudFront |
+| 2 | Django + PostgreSQL | Python, Django | Render |
+| 3 | Microservices | Docker | ECS Fargate |
+| 4 | Next.js | Next.js, React | Vercel |
+| 5 | Spring Boot | Java, Maven | Docker Hub + SSH |
+| 6 | Full-Stack | React + Node.js + MongoDB | AWS + Docker |
+| 7 | FastAPI | Python, FastAPI | Railway |
+| 8 | Go App | Golang | GHCR |
+
+---
+
+### 1️⃣ React + AWS S3 + CloudFront (Production)
+
+> **Stack:** React · Node.js 20 · AWS S3 · CloudFront · Codecov · Slack  
+> **Secrets:** `API_URL`, `CODECOV_TOKEN`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `S3_BUCKET`, `CLOUDFRONT_ID`, `SLACK_WEBHOOK`
 
 ```yaml
-name: Node.js CI
+name: Deploy React to Production
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  VITE_API_URL: ${{ secrets.API_URL }}
+  VITE_APP_ENV: production
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run test:coverage
+      - run: npm run lint
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-files
+          path: dist/
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment: production
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: build-files
+          path: dist/
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Sync to S3
+        run: aws s3 sync dist/ s3://${{ secrets.S3_BUCKET }} --delete
+
+      - name: Invalidate CloudFront
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_ID }} \
+            --paths "/*"
+
+      - name: Slack Notification
+        uses: slackapi/slack-github-action@v1
+        if: success()
+        with:
+          payload: |
+            {
+              "text": "🚀 React app deployed to production!\nCommit: ${{ github.sha }}\nBy: ${{ github.actor }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+```
+
+---
+
+### 2️⃣ Python Django + PostgreSQL → Render
+
+> **Stack:** Python 3.11 · Django · PostgreSQL 15 · Codecov  
+> **Secrets:** `CODECOV_TOKEN`, `RENDER_SERVICE_ID`, `RENDER_API_KEY`
+
+```yaml
+name: Deploy Django Backend
 
 on:
   push:
@@ -479,93 +587,314 @@ on:
     branches: [main]
 
 jobs:
-  build-and-test:
+  test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: testpass123
+          POSTGRES_DB: testdb
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - run: pip install -r requirements.txt
+      - run: pip install pytest pytest-cov
+
+      - name: Run migrations
+        run: python manage.py migrate
+        env:
+          DATABASE_URL: postgresql://postgres:testpass123@localhost:5432/testdb
+
+      - name: Run tests
+        run: pytest --cov=. --cov-report=xml
+        env:
+          DATABASE_URL: postgresql://postgres:testpass123@localhost:5432/testdb
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    environment: production
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Deploy to Render
+        uses: johnbeynon/render-deploy-action@v0.0.8
         with:
-          node-version: "18"
-
-      - run: npm ci
-      - run: npm run lint
-      - run: npm test
-      - run: npm run build
+          service-id: ${{ secrets.RENDER_SERVICE_ID }}
+          api-key: ${{ secrets.RENDER_API_KEY }}
+          wait-for-success: true
 ```
 
 ---
 
-### Example 2: Docker Build & Push on Release
+### 3️⃣ Docker Microservices → AWS ECS Fargate
+
+> **Stack:** Docker · AWS ECR · AWS ECS Fargate  
+> **Secrets:** `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `ECR_REGISTRY`
 
 ```yaml
-name: Docker Build & Push
-
-on:
-  release:
-    types: [published]
-
-jobs:
-  docker:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Build and Push
-        uses: docker/build-push-action@v5
-        with:
-          push: true
-          tags: |
-            myapp:latest
-            myapp:${{ github.sha }}
-```
-
----
-
-### Example 3: Deploy React App to AWS S3
-
-```yaml
-name: Deploy to AWS S3
+name: Deploy to ECS Fargate
 
 on:
   push:
     branches: [main]
+  release:
+    types: [published]
 
 jobs:
-  deploy:
+  build-and-push:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "18"
-
-      - run: npm ci
-      - run: npm test
-      - run: npm run build
-
-      - name: Configure AWS Credentials
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Sync to S3
-        run: aws s3 sync build/ s3://my-bucket --delete
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Invalidate CloudFront
+      - name: Build, tag, and push image
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: |
+            ${{ secrets.ECR_REGISTRY }}/myapp:${{ github.sha }}
+            ${{ secrets.ECR_REGISTRY }}/myapp:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Update ECS service
         run: |
+          aws ecs update-service \
+            --cluster my-cluster \
+            --service my-service \
+            --force-new-deployment \
+            --region us-east-1
+
+      - name: Wait for deployment
+        run: |
+          aws ecs wait services-stable \
+            --cluster my-cluster \
+            --services my-service
+```
+
+---
+
+### 4️⃣ Next.js → Vercel (Preview + Production)
+
+> **Stack:** Next.js · Node.js 20 · Vercel  
+> **Secrets:** `VERCEL_TOKEN`, `ORG_ID`, `PROJECT_ID`
+
+```yaml
+name: Deploy Next.js to Vercel
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run test
+      - run: npm run build
+
+  deploy-preview:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.ORG_ID }}
+          vercel-project-id: ${{ secrets.PROJECT_ID }}
+          github-comment: true
+          vercel-args: '--prod'
+
+  deploy-production:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.ORG_ID }}
+          vercel-project-id: ${{ secrets.PROJECT_ID }}
+          vercel-args: '--prod'
+          github-comment: false
+```
+
+---
+
+### 5️⃣ Java Spring Boot → Docker Hub + SSH Deploy
+
+> **Stack:** Java 17 · Maven · Docker Hub · SSH  
+> **Secrets:** `DOCKER_USERNAME`, `DOCKER_PASSWORD`, `SERVER_HOST`, `SERVER_USER`, `SSH_PRIVATE_KEY`
+
+```yaml
+name: Deploy Spring Boot App
+
+on:
+  push:
+    branches: [main]
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+
+      - name: Build with Maven
+        run: mvn clean package -DskipTests
+
+      - name: Run tests
+        run: mvn test
+
+      - name: Build Docker image
+        run: |
+          docker build -t myapp:${{ github.sha }} .
+          docker tag myapp:${{ github.sha }} myapp:latest
+
+      - name: Push to Docker Hub
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          docker push myapp:${{ github.sha }}
+          docker push myapp:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            docker pull myapp:latest
+            docker stop myapp || true
+            docker rm myapp || true
+            docker run -d --name myapp -p 8080:8080 myapp:latest
+```
+
+---
+
+### 6️⃣ Full-Stack: React + Node.js + MongoDB
+
+> **Stack:** React · Node.js 20 · Docker · AWS S3 · CloudFront  
+> **Secrets:** `DOCKER_USERNAME`, `DOCKER_PASSWORD`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `S3_BUCKET`, `CLOUDFRONT_ID`
+
+```yaml
+name: Deploy Full-Stack Application
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: cd frontend && npm ci
+      - run: cd frontend && npm test
+      - run: cd frontend && npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/dist/
+
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: cd backend && npm ci
+      - run: cd backend && npm test
+      - name: Build Docker image
+        run: |
+          cd backend
+          docker build -t myapi:${{ github.sha }} .
+          docker tag myapi:${{ github.sha }} myapi:latest
+      - name: Push to Docker Hub
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          docker push myapi:latest
+
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    needs: frontend
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: dist/
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - run: aws s3 sync dist/ s3://${{ secrets.S3_BUCKET }} --delete
+      - run: |
           aws cloudfront create-invalidation \
             --distribution-id ${{ secrets.CLOUDFRONT_ID }} \
             --paths "/*"
@@ -573,87 +902,94 @@ jobs:
 
 ---
 
-### Example 4: Matrix Build with Artifact Upload
+### 7️⃣ Python FastAPI → Railway
+
+> **Stack:** Python 3.11 · FastAPI · Railway CLI  
+> **Secrets:** `RAILWAY_TOKEN`
 
 ```yaml
-name: Multi-Version Test
+name: Deploy FastAPI to Railway
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [16, 18, 20]
-
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-python@v5
         with:
-          node-version: ${{ matrix.node-version }}
-
-      - run: npm ci
-      - run: npm test
-
-  build:
-    runs-on: ubuntu-latest
-    needs: test
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "18"
-
-      - run: npm ci
-      - run: npm run build
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: production-build
-          path: dist/
-```
-
----
-
-### Example 5: Manual Build → Test → Deploy Pipeline
-
-```yaml
-name: Manual Deploy Pipeline
-
-on: workflow_dispatch
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "18"
-      - run: npm ci
-      - run: npm run build
-
-  test:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "18"
-      - run: npm ci
-      - run: npm test
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: pip install pytest httpx
+      - run: pytest tests/ -v
 
   deploy:
     runs-on: ubuntu-latest
     needs: test
-    if: github.ref == 'refs/heads/main'
     steps:
-      - run: echo "🚀 Deploying to production..."
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+      - run: npm install -g @railway/cli
+      - run: railway up --service=myapi
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+```
+
+---
+
+### 8️⃣ Golang → GitHub Container Registry (GHCR)
+
+> **Stack:** Go 1.21 · Docker · GHCR  
+> **Secrets:** Uses built-in `GITHUB_TOKEN` (no extra secrets needed!)
+
+```yaml
+name: Deploy Go App to GHCR
+
+on:
+  push:
+    branches: [main]
+  release:
+    types: [published]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
+      - run: go test -v ./...
+      - run: go build -o myapp
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: test
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/myapp:latest
+            ghcr.io/${{ github.repository }}/myapp:${{ github.sha }}
 ```
 
 ---
