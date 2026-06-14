@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CI/CD Master Cheat Sheet — CloudDeployX</title>
+  <meta name="description" content="Interactive GitHub Actions & CI/CD cheat sheet. Search, filter, and copy workflow snippets instantly." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    /* ─── Design Tokens ─── */
+    :root {
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+      /* Light palette */
+      --bg-primary: #f0f2f5;
+      --bg-secondary: #ffffff;
+      --bg-card: rgba(255, 255, 255, 0.72);
+      --bg-card-hover: rgba(255, 255, 255, 0.92);
+      --bg-code: #1e1e2e;
+      --text-primary: #1a1a2e;
+      --text-secondary: #4a4a6a;
+      --text-muted: #7a7a9a;
+      --text-code: #cdd6f4;
+      --border-color: rgba(0, 0, 0, 0.08);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 20px rgba(0,0,0,0.08);
+      --shadow-lg: 0 8px 40px rgba(0,0,0,0.12);
+      --blur: 16px;
+
+      /* Accent */
+      --accent-h: 250;
+      --accent: hsl(var(--accent-h), 85%, 60%);
+      --accent-soft: hsl(var(--accent-h), 85%, 95%);
+      --accent-glow: hsl(var(--accent-h), 85%, 60%, 0.25);
+
+      /* Category hues */
+      --hue-source: 210;
+      --hue-lang: 160;
+      --hue-deps: 35;
+      --hue-build: 280;
+      --hue-test: 330;
+      --hue-docker: 200;
+      --hue-aws: 25;
+      --hue-npm: 0;
+      --hue-artifacts: 140;
+      --hue-triggers: 260;
+      --hue-jobs: 300;
+      --hue-workdir: 180;
+      --hue-env: 50;
+      --hue-matrix: 190;
+
+      color-scheme: light dark;
+    }
+
+    /* ─── Dark Mode ─── */
+    [data-theme="dark"] {
+      --bg-primary: #0d0f17;
+      --bg-secondary: #161822;
+      --bg-card: rgba(22, 24, 40, 0.7);
+      --bg-card-hover: rgba(30, 33, 55, 0.85);
+      --text-primary: #e4e6f0;
+      --text-secondary: #9ca0b8;
+      --text-muted: #5a5e7a;
+      --border-color: rgba(255, 255, 255, 0.06);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+      --shadow-md: 0 4px 20px rgba(0,0,0,0.4);
+      --shadow-lg: 0 8px 40px rgba(0,0,0,0.5);
+      --accent-soft: hsl(var(--accent-h), 85%, 15%);
+    }
+
+    /* ─── Reset ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      transition: background 0.4s ease, color 0.4s ease;
+    }
+
+    /* ─── Animated Background ─── */
+    .bg-mesh {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .bg-mesh .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.18;
+      animation: orbFloat 20s ease-in-out infinite;
+    }
+    .bg-mesh .orb:nth-child(1) {
+      width: 600px; height: 600px;
+      background: hsl(250, 80%, 60%);
+      top: -10%; left: -10%;
+      animation-delay: 0s;
+    }
+    .bg-mesh .orb:nth-child(2) {
+      width: 500px; height: 500px;
+      background: hsl(180, 80%, 50%);
+      top: 40%; right: -15%;
+      animation-delay: -7s;
+    }
+    .bg-mesh .orb:nth-child(3) {
+      width: 400px; height: 400px;
+      background: hsl(330, 80%, 60%);
+      bottom: -5%; left: 30%;
+      animation-delay: -14s;
+    }
+    @keyframes orbFloat {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(60px, -40px) scale(1.1); }
+      66% { transform: translate(-40px, 30px) scale(0.95); }
+    }
+
+    [data-theme="dark"] .bg-mesh .orb { opacity: 0.08; }
+
+    /* ─── Layout ─── */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ─── Header ─── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--bg-card);
+      backdrop-filter: blur(var(--blur));
+      -webkit-backdrop-filter: blur(var(--blur));
+      border-bottom: 1px solid var(--border-color);
+      padding: 16px 0;
+      transition: background 0.4s ease;
+    }
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-icon {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, hsl(250, 85%, 60%), hsl(200, 85%, 55%));
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-size: 20px;
+      color: white;
+      font-weight: 800;
+      box-shadow: 0 2px 12px hsl(250, 85%, 60%, 0.3);
+    }
+    .logo h1 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, var(--text-primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .logo span {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* ─── Controls ─── */
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Theme Toggle */
+    #themeToggle {
+      width: 42px; height: 42px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      transition: all 0.3s ease;
+    }
+    #themeToggle:hover {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      transform: rotate(20deg);
+    }
+
+    /* Search */
+    .search-box {
+      position: relative;
+      flex: 1;
+      min-width: 240px;
+      max-width: 420px;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 10px 16px 10px 42px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 0.9rem;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+    .search-box input::placeholder { color: var(--text-muted); }
+    .search-box input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .search-box .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 16px;
+      pointer-events: none;
+    }
+    .search-box .clear-btn {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 16px;
+      display: none;
+      padding: 4px;
+      border-radius: 4px;
+    }
+    .search-box .clear-btn.visible { display: block; }
+    .search-box .clear-btn:hover { color: var(--text-primary); }
+
+    /* ─── Stats Bar ─── */
+    .stats-bar {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      padding: 20px 0 8px;
+      flex-wrap: wrap;
+    }
+    .stat-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+    }
+    .stat-chip strong {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+
+    /* ─── Filters ─── */
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      padding: 12px 0 24px;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      padding: 7px 16px;
+      border-radius: 100px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      font-family: var(--font-sans);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      white-space: nowrap;
+    }
+    .filter-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      transform: translateY(-1px);
+    }
+    .filter-btn.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+      box-shadow: 0 2px 12px var(--accent-glow);
+    }
+
+    /* ─── Memory Trick Banner ─── */
+    .memory-banner {
+      background: var(--bg-card);
+      backdrop-filter: blur(var(--blur));
+      -webkit-backdrop-filter: blur(var(--blur));
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 28px 32px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow-md);
+      transition: all 0.4s ease;
+    }
+    .memory-banner h2 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .pipeline-visual {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .pipeline-step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 20px;
+      border-radius: 14px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      transition: all 0.3s ease;
+      cursor: default;
+    }
+    .pipeline-step:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+    }
+    .pipeline-step .step-num {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 0.8rem;
+      color: white;
+      flex-shrink: 0;
+    }
+    .pipeline-step:nth-child(1) .step-num { background: hsl(210, 80%, 55%); }
+    .pipeline-step:nth-child(3) .step-num { background: hsl(160, 70%, 42%); }
+    .pipeline-step:nth-child(5) .step-num { background: hsl(35, 85%, 52%); }
+    .pipeline-step:nth-child(7) .step-num { background: hsl(330, 75%, 55%); }
+    .pipeline-step:nth-child(9) .step-num { background: hsl(250, 80%, 60%); }
+    .pipeline-step .step-label {
+      font-weight: 700;
+      font-size: 0.82rem;
+      letter-spacing: 0.02em;
+    }
+    .pipeline-step .step-desc {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+    .pipeline-arrow {
+      font-size: 1.4rem;
+      color: var(--text-muted);
+      padding: 0 6px;
+      flex-shrink: 0;
+    }
+
+    /* ─── Card Grid ─── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(520px, 1fr));
+      gap: 20px;
+      padding-bottom: 80px;
+    }
+    @media (max-width: 620px) {
+      .card-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ─── Card ─── */
+    .card {
+      background: var(--bg-card);
+      backdrop-filter: blur(var(--blur));
+      -webkit-backdrop-filter: blur(var(--blur));
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      overflow: hidden;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: var(--shadow-sm);
+      animation: cardIn 0.5s ease both;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+      background: var(--bg-card-hover);
+      border-color: var(--accent-glow);
+    }
+    .card.hidden {
+      display: none;
+    }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-header {
+      padding: 20px 24px 12px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .card-category {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      flex: 1;
+    }
+
+    .card-body {
+      padding: 0 24px 20px;
+    }
+    .card-body table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 0.82rem;
+    }
+    .card-body thead {
+      display: none;
+    }
+    .card-body tbody,
+    .card-body tr,
+    .card-body td {
+      display: block;
+      width: 100%;
+    }
+    .card-body th {
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-muted);
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .card-body td {
+      padding: 0;
+      vertical-align: top;
+      border-bottom: none;
+    }
+    .card-body tr {
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .card-body tr:last-child { border-bottom: none; padding-bottom: 0; }
+    .card-body td:first-child {
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      font-weight: 600;
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
+
+    /* Code block inside table */
+    .code-cell {
+      position: relative;
+      max-width: 100%;
+    }
+    .code-snippet {
+      background: var(--bg-code);
+      color: var(--text-code);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      padding: 12px 14px;
+      border-radius: 10px;
+      overflow-x: hidden;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      position: relative;
+    }
+
+    /* Syntax highlighting tokens */
+    .syn-key { color: #89b4fa; }
+    .syn-str { color: #a6e3a1; }
+    .syn-val { color: #fab387; }
+    .syn-cmt { color: #585b70; font-style: italic; }
+    .syn-act { color: #f5c2e7; }
+    .syn-var { color: #f9e2af; }
+    .syn-kw  { color: #cba6f7; }
+
+    .copy-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      border: none;
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      opacity: 0;
+    }
+    .code-cell:hover .copy-btn { opacity: 1; }
+    .copy-btn:hover {
+      background: rgba(255,255,255,0.15);
+      color: white;
+    }
+    .copy-btn.copied {
+      background: hsl(140, 70%, 40%);
+      color: white;
+      opacity: 1;
+    }
+
+    /* ─── Empty State ─── */
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--text-muted);
+    }
+    .empty-state .empty-icon { font-size: 3rem; margin-bottom: 16px; }
+    .empty-state h3 { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 6px; }
+    .empty-state p { font-size: 0.9rem; }
+
+    /* ─── Quick ID Guide Section ─── */
+    .quick-guide {
+      background: var(--bg-card);
+      backdrop-filter: blur(var(--blur));
+      -webkit-backdrop-filter: blur(var(--blur));
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 28px 32px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow-md);
+    }
+    .quick-guide h2 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .quick-guide-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 10px;
+    }
+    .quick-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      font-size: 0.8rem;
+      transition: all 0.2s ease;
+    }
+    .quick-item:hover {
+      border-color: var(--accent);
+      transform: translateX(4px);
+    }
+    .quick-keyword {
+      font-weight: 700;
+      color: var(--accent);
+      white-space: nowrap;
+      min-width: 80px;
+    }
+    .quick-arrow { color: var(--text-muted); flex-shrink: 0; }
+    .quick-action {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* ─── Keyboard shortcut badge ─── */
+    kbd {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-secondary);
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* ─── Footer ─── */
+    footer {
+      text-align: center;
+      padding: 32px 0;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      border-top: 1px solid var(--border-color);
+    }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 768px) {
+      .header-inner { flex-direction: column; align-items: stretch; }
+      .logo { justify-content: center; }
+      .controls { justify-content: center; }
+      .search-box { max-width: 100%; }
+      .pipeline-visual { gap: 0; }
+      .pipeline-arrow { display: none; }
+      .pipeline-visual { gap: 8px; }
+      .card-grid { grid-template-columns: 1fr; }
+      .memory-banner, .quick-guide { padding: 20px; }
+    }
+
+    /* ─── Scrollbar ─── */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    /* ─── Selection ─── */
+    ::selection { background: var(--accent-glow); color: var(--text-primary); }
+  </style>
+</head>
+<body data-theme="dark">
+
+  <!-- Animated background -->
+  <div class="bg-mesh">
+    <div class="orb"></div>
+    <div class="orb"></div>
+    <div class="orb"></div>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <div class="container header-inner">
+      <div class="logo">
+        <div class="logo-icon">⚡</div>
+        <div>
+          <h1>CI/CD Master Cheat Sheet</h1>
+          <span>CloudDeployX • GitHub Actions Reference</span>
+        </div>
+      </div>
+      <div class="controls">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchInput" placeholder="Search actions, triggers, secrets…" autocomplete="off" />
+          <button class="clear-btn" id="clearSearch" aria-label="Clear search">✕</button>
+        </div>
+        <button id="themeToggle" aria-label="Toggle theme">🌙</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+      <div class="stat-chip"><strong id="totalCards">0</strong> Snippets</div>
+      <div class="stat-chip"><strong>22</strong> Categories</div>
+      <div class="stat-chip"><strong id="visibleCards">0</strong> Showing</div>
+      <div style="flex:1"></div>
+      <div class="stat-chip"><kbd>⌘ K</kbd> &nbsp;Focus Search</div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-row" id="filterRow">
+      <button class="filter-btn active" data-filter="all">All</button>
+    </div>
+
+    <!-- Memory Trick -->
+    <div class="memory-banner">
+      <h2>🧠 The 5 Universal Steps — <em style="font-weight:400; color:var(--text-muted);">C → S → I → T → D</em></h2>
+      <div class="pipeline-visual">
+        <div class="pipeline-step">
+          <div class="step-num">1</div>
+          <div>
+            <div class="step-label">CHECKOUT</div>
+            <div class="step-desc">Get source code</div>
+          </div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="step-num">2</div>
+          <div>
+            <div class="step-label">SETUP</div>
+            <div class="step-desc">Install language</div>
+          </div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="step-num">3</div>
+          <div>
+            <div class="step-label">INSTALL</div>
+            <div class="step-desc">Get dependencies</div>
+          </div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="step-num">4</div>
+          <div>
+            <div class="step-label">TEST</div>
+            <div class="step-desc">Run tests</div>
+          </div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="step-num">5</div>
+          <div>
+            <div class="step-label">DEPLOY</div>
+            <div class="step-desc">Final action</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick ID Guide -->
+    <div class="quick-guide">
+      <h2>⚡ Quick Keyword → Action Lookup</h2>
+      <div class="quick-guide-grid" id="quickGuideGrid"></div>
+    </div>
+
+    <!-- Card Grid -->
+    <div class="card-grid" id="cardGrid"></div>
+  </main>
+
+  <footer>
+    <div class="container">
+      Built for <strong>CloudDeployX</strong> · Covers 95% of CI/CD questions 🚀
+    </div>
+  </footer>
+
+<script>
+/* ═══════════════════════════════════════════════
+   DATA
+   ═══════════════════════════════════════════════ */
+
+const CATEGORIES = {
+  source:    { label: 'Source Code',     hue: 210, emoji: '📦' },
+  lang:      { label: 'Language Setup',  hue: 160, emoji: '🔧' },
+  deps:      { label: 'Dependencies',    hue: 35,  emoji: '📥' },
+  build:     { label: 'Building',        hue: 280, emoji: '🏗️' },
+  test:      { label: 'Testing',         hue: 330, emoji: '🧪' },
+  docker:    { label: 'Docker',          hue: 200, emoji: '🐳' },
+  aws:       { label: 'AWS Deploy',      hue: 25,  emoji: '☁️' },
+  npm:       { label: 'NPM Publish',     hue: 0,   emoji: '📦' },
+  artifacts: { label: 'Artifacts',       hue: 140, emoji: '💾' },
+  triggers:  { label: 'Triggers',        hue: 260, emoji: '🎯' },
+  jobs:      { label: 'Job Control',     hue: 300, emoji: '🔗' },
+  workdir:   { label: 'Working Dir',     hue: 180, emoji: '📂' },
+  env:       { label: 'Environment',     hue: 50,  emoji: '🔐' },
+  matrix:    { label: 'Matrix',          hue: 190, emoji: '🧮' },
+  react:     { label: 'React + AWS',     hue: 210, emoji: '⚛️' },
+  django:    { label: 'Django',          hue: 160, emoji: '🐍' },
+  ecs:       { label: 'Docker + ECS',    hue: 200, emoji: '🐳' },
+  nextjs:    { label: 'Next.js',         hue: 220, emoji: '▲' },
+  spring:    { label: 'Spring Boot',     hue: 25,  emoji: '🍃' },
+  fullstack: { label: 'Full-Stack',      hue: 280, emoji: '🌐' },
+  fastapi:   { label: 'FastAPI',         hue: 30,  emoji: '⚡' },
+  golang:    { label: 'Go + GHCR',       hue: 190, emoji: '🐹' },
+};
+
+const DATA = [
+  // Source Code Management
+  {
+    cat: 'source', title: 'Checkout / Clone Repository',
+    rows: [
+      ['Checkout code',    'uses: actions/checkout@v4'],
+      ['Clone repository', 'uses: actions/checkout@v4'],
+      ['Get source code',  'uses: actions/checkout@v4'],
+    ]
+  },
+  // Language Setup
+  {
+    cat: 'lang', title: 'Setup Runtime Languages',
+    rows: [
+      ['Setup Node.js', 'uses: actions/setup-node@v4\nwith:\n  node-version: "18"'],
+      ['Setup Python',  'uses: actions/setup-python@v5\nwith:\n  python-version: "3.11"'],
+      ['Setup Java',    'uses: actions/setup-java@v4\nwith:\n  distribution: "temurin"\n  java-version: "17"'],
+      ['Setup Go',      'uses: actions/setup-go@v5\nwith:\n  go-version: "1.21"'],
+    ]
+  },
+  // Dependencies
+  {
+    cat: 'deps', title: 'Install Dependencies',
+    rows: [
+      ['Install deps (Node)',  'run: npm install'],
+      ['Clean install (CI)',   'run: npm ci'],
+      ['Install pip packages', 'run: pip install -r requirements.txt'],
+    ]
+  },
+  // Building
+  {
+    cat: 'build', title: 'Build Application',
+    rows: [
+      ['Build application',    'run: npm run build'],
+      ['Compile code',         'run: npm run build'],
+      ['Create build folder',  'run: npm run build'],
+      ['Generate dist folder', 'run: npm run build'],
+    ]
+  },
+  // Testing
+  {
+    cat: 'test', title: 'Run Tests & Linting',
+    rows: [
+      ['Run tests',      'run: npm test'],
+      ['Run unit tests',  'run: npm test'],
+      ['Run pytest',      'run: pytest'],
+      ['Run linter',      'run: npm run lint'],
+    ]
+  },
+  // Docker
+  {
+    cat: 'docker', title: 'Docker Hub Login',
+    rows: [
+      ['Login to Docker Hub', 'uses: docker/login-action@v3\nwith:\n  username: ${{ secrets.DOCKER_USERNAME }}\n  password: ${{ secrets.DOCKER_PASSWORD }}'],
+    ]
+  },
+  {
+    cat: 'docker', title: 'Docker Build, Tag & Push',
+    rows: [
+      ['Build Docker image', 'run: docker build -t myapp:${{ github.sha }} .'],
+      ['Tag Docker image',   'run: docker tag myapp:${{ github.sha }} myapp:latest'],
+      ['Push Docker image',  'run: docker push myapp:latest'],
+      ['Build + Push (one step)', 'uses: docker/build-push-action@v5\nwith:\n  push: true\n  tags: myapp:latest'],
+    ]
+  },
+  // AWS
+  {
+    cat: 'aws', title: 'AWS Credentials & S3 Sync',
+    rows: [
+      ['Configure AWS creds', 'uses: aws-actions/configure-aws-credentials@v4\nwith:\n  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}\n  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}\n  aws-region: us-east-1'],
+      ['Sync to S3',          'run: aws s3 sync build/ s3://bucket-name --delete'],
+      ['Invalidate CloudFront', 'run: |\n  aws cloudfront create-invalidation \\\n    --distribution-id ${{ secrets.CLOUDFRONT_ID }} \\\n    --paths "/*"'],
+    ]
+  },
+  // NPM Publishing
+  {
+    cat: 'npm', title: 'Publish to NPM Registry',
+    rows: [
+      ['Setup npm registry', 'uses: actions/setup-node@v4\nwith:\n  node-version: "18"\n  registry-url: "https://registry.npmjs.org/"'],
+      ['Publish to npm',     'run: npm publish\nenv:\n  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}'],
+    ]
+  },
+  // Artifacts
+  {
+    cat: 'artifacts', title: 'Upload & Download Artifacts',
+    rows: [
+      ['Upload build artifact', 'uses: actions/upload-artifact@v4\nwith:\n  name: artifact-name\n  path: dist/'],
+      ['Download artifact',     'uses: actions/download-artifact@v4\nwith:\n  name: artifact-name\n  path: ./download'],
+    ]
+  },
+  // Triggers
+  {
+    cat: 'triggers', title: 'Workflow Triggers',
+    rows: [
+      ['Push to main',       'on:\n  push:\n    branches: [main]'],
+      ['PR to main',         'on:\n  pull_request:\n    branches: [main]'],
+      ['Manual trigger',     'on: workflow_dispatch'],
+      ['Release published',  'on:\n  release:\n    types: [published]'],
+      ['Schedule daily',     'on:\n  schedule:\n    - cron: \'0 0 * * *\''],
+      ['Push and PR both',   'on: [push, pull_request]'],
+    ]
+  },
+  // Job Control
+  {
+    cat: 'jobs', title: 'Job Dependencies & Conditions',
+    rows: [
+      ['Run after job completes', 'needs: previous-job-name'],
+      ['Only on main branch',    'if: github.ref == \'refs/heads/main\''],
+      ['Only on push event',     'if: github.event_name == \'push\''],
+      ['Run parallel jobs',      '# No needs: keyword\n# Jobs run parallel by default'],
+    ]
+  },
+  // Working Directory
+  {
+    cat: 'workdir', title: 'Working Directory',
+    rows: [
+      ['Run in sub-folder', 'working-directory: ./folder\nrun: npm install'],
+    ]
+  },
+  // Environment Variables
+  {
+    cat: 'env', title: 'Environment Variables & Secrets',
+    rows: [
+      ['Set env variable',  'env:\n  VAR_NAME: value'],
+      ['Use secret',        '${{ secrets.SECRET_NAME }}'],
+      ['Print commit hash', 'run: echo ${{ github.sha }}'],
+    ]
+  },
+  // Matrix Strategy
+  {
+    cat: 'matrix', title: 'Matrix Build Strategy',
+    rows: [
+      ['Test multiple versions', 'strategy:\n  matrix:\n    node-version: [16, 18, 20]'],
+      ['Use matrix in step',     'uses: actions/setup-node@v4\nwith:\n  node-version: ${{ matrix.node-version }}'],
+    ]
+  },
+  // Real-World Examples
+  {
+    cat: 'react', title: 'React + AWS S3 + CloudFront',
+    rows: [['Complete React Pipeline', `name: Deploy React to Production
+on:
+  push:
+    branches: [main]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+  deploy:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: \${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: \${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - run: aws s3 sync build/ s3://my-bucket --delete`]]
+  },
+  {
+    cat: 'django', title: 'Django + PostgreSQL on Render',
+    rows: [['Django Pipeline', `name: Deploy Django
+on:
+  push:
+    branches: [main]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: testpass
+        ports:
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: pytest
+  deploy:
+    needs: test
+    uses: johnbeynon/render-deploy-action@v0.0.8
+    with:
+      service-id: \${{ secrets.RENDER_SERVICE_ID }}
+      api-key: \${{ secrets.RENDER_API_KEY }}`]]
+  },
+  {
+    cat: 'ecs', title: 'Docker + AWS ECS Fargate',
+    rows: [['ECS Pipeline', `name: Deploy to ECS
+on:
+  push:
+    branches: [main]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: \${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: \${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - uses: aws-actions/amazon-ecr-login@v2
+      - uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: myapp:latest
+      - run: aws ecs update-service --cluster my-cluster --service my-service --force-new-deployment`]]
+  },
+  {
+    cat: 'nextjs', title: 'Next.js + Vercel',
+    rows: [['Next.js Pipeline', `name: Deploy Next.js
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+  deploy-preview:
+    if: github.event_name == 'pull_request'
+    uses: amondnet/vercel-action@v25
+    with:
+      vercel-token: \${{ secrets.VERCEL_TOKEN }}
+  deploy-production:
+    if: github.ref == 'refs/heads/main'
+    uses: amondnet/vercel-action@v25
+    with:
+      vercel-token: \${{ secrets.VERCEL_TOKEN }}
+      vercel-args: '--prod'`]]
+  },
+  {
+    cat: 'spring', title: 'Java Spring Boot + Docker Hub',
+    rows: [['Spring Boot Pipeline', `name: Deploy Spring Boot
+on:
+  push:
+    branches: [main]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - run: mvn clean package
+      - run: docker build -t myapp:latest .
+      - run: echo "\${{ secrets.DOCKER_PASSWORD }}" | docker login -u "\${{ secrets.DOCKER_USERNAME }}" --password-stdin
+      - run: docker push myapp:latest
+  deploy:
+    needs: build
+    uses: appleboy/ssh-action@v1.0.3
+    with:
+      host: \${{ secrets.SERVER_HOST }}
+      username: \${{ secrets.SERVER_USER }}
+      key: \${{ secrets.SSH_PRIVATE_KEY }}
+      script: |
+        docker pull myapp:latest
+        docker run -d --name myapp -p 8080:8080 myapp:latest`]]
+  },
+  {
+    cat: 'fullstack', title: 'Full-Stack (React + Node.js)',
+    rows: [['Full-Stack Pipeline', `name: Deploy Full-Stack
+on:
+  push:
+    branches: [main]
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: cd frontend && npm ci
+      - run: cd frontend && npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/dist/
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: cd backend && npm ci
+      - run: cd backend && npm test
+      - run: docker build -t myapi:latest ./backend
+      - run: docker push myapi:latest
+  deploy:
+    needs: [frontend, backend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: dist/
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: \${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: \${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - run: aws s3 sync dist/ s3://my-bucket --delete`]]
+  },
+  {
+    cat: 'fastapi', title: 'FastAPI + Railway',
+    rows: [['FastAPI Pipeline', `name: Deploy FastAPI
+on:
+  push:
+    branches: [main]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: pytest
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+      - run: npm install -g @railway/cli
+      - run: railway up --service=myapi
+        env:
+          RAILWAY_TOKEN: \${{ secrets.RAILWAY_TOKEN }}`]]
+  },
+  {
+    cat: 'golang', title: 'Golang + GitHub Container Registry',
+    rows: [['Go GHCR Pipeline', `name: Deploy Go to GHCR
+on:
+  push:
+    branches: [main]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
+      - run: go test -v ./...
+      - run: go build -o myapp
+  publish:
+    needs: test
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: \${{ github.actor }}
+          password: \${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: |
+            ghcr.io/\${{ github.repository }}/myapp:latest
+            ghcr.io/\${{ github.repository }}/myapp:\${{ github.sha }}`]]
+  },
+];
+
+const QUICK_KEYWORDS = [
+  { kw: 'checkout / clone',  action: 'actions/checkout@v4' },
+  { kw: 'Node.js / npm',     action: 'actions/setup-node@v4' },
+  { kw: 'Python / pip',      action: 'actions/setup-python@v5' },
+  { kw: 'install deps',      action: 'run: npm ci' },
+  { kw: 'build',             action: 'run: npm run build' },
+  { kw: 'test',              action: 'run: npm test' },
+  { kw: 'Docker',            action: 'docker/login-action + build-push-action' },
+  { kw: 'AWS / S3',          action: 'aws-actions/configure-aws-credentials' },
+  { kw: 'npm publish',       action: 'registry-url + npm publish' },
+  { kw: 'artifact',          action: 'upload-artifact / download-artifact' },
+  { kw: 'secrets',           action: '${{ secrets.NAME }}' },
+  { kw: 'main branch only',  action: 'if: github.ref == \'refs/heads/main\'' },
+  { kw: 'React + AWS',       action: 'React to S3 + CloudFront' },
+  { kw: 'Django + Render',   action: 'Python Django on Render' },
+  { kw: 'ECS Fargate',       action: 'Docker on AWS ECS' },
+  { kw: 'Next.js + Vercel',  action: 'Next.js preview + production' },
+  { kw: 'Spring Boot',       action: 'Java to Docker Hub + SSH' },
+  { kw: 'FastAPI + Railway', action: 'Python FastAPI on Railway' },
+  { kw: 'Go + GHCR',         action: 'Golang on GitHub Container Registry' },
+];
+
+/* ═══════════════════════════════════════════════
+   RENDERING
+   ═══════════════════════════════════════════════ */
+
+function highlightYaml(code) {
+  // Escape HTML first
+  let s = code
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  const tokens = [];
+  const mark = (className, text) => {
+    const id = `@@HL${tokens.length}@@`;
+    tokens.push([id, `<span class="${className}">${text}</span>`]);
+    return id;
+  };
+
+  // Comments
+  s = s.replace(/(#[^\n]*)/g, m => mark('syn-cmt', m));
+
+  // ${{ ... }} expressions
+  s = s.replace(/(\$\{\{[^}]*\}\})/g, m => mark('syn-var', m));
+
+  // Strings in quotes
+  s = s.replace(/("[^"]*")/g, m => mark('syn-str', m));
+  s = s.replace(/('[^']*')/g, m => mark('syn-str', m));
+
+  // YAML keys
+  s = s.replace(/^(\s*)([\w-]+)(:)/gm, (_, indent, key, colon) => `${indent}${mark('syn-key', key)}${colon}`);
+
+  // Action references (word/word@vN)
+  s = s.replace(/([\w-]+\/[\w-]+@v\d+)/g, m => mark('syn-act', m));
+
+  // Boolean / number values
+  s = s.replace(/:\s+(true|false)\b/g, (_, value) => `: ${mark('syn-val', value)}`);
+
+  tokens.forEach(([id, html]) => {
+    s = s.replaceAll(id, html);
+  });
+
+  return s;
+}
+
+function getCategoryStyle(hue) {
+  return `background: hsl(${hue}, 80%, 92%); color: hsl(${hue}, 70%, 35%);`;
+}
+function getCategoryStyleDark(hue) {
+  return `background: hsl(${hue}, 50%, 15%); color: hsl(${hue}, 80%, 70%);`;
+}
+
+function renderCards() {
+  const grid = document.getElementById('cardGrid');
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
+  let html = '';
+  DATA.forEach((item, idx) => {
+    const cat = CATEGORIES[item.cat];
+    const catStyle = isDark ? getCategoryStyleDark(cat.hue) : getCategoryStyle(cat.hue);
+
+    let tableRows = '';
+    item.rows.forEach(([label, code]) => {
+      const rawCode = code;
+      const highlighted = highlightYaml(code);
+      tableRows += `
+        <tr>
+          <td>${label}</td>
+          <td class="code-cell">
+            <div class="code-snippet">${highlighted}</div>
+            <button class="copy-btn" data-code="${encodeURIComponent(rawCode)}" title="Copy" aria-label="Copy to clipboard">📋</button>
+          </td>
+        </tr>`;
+    });
+
+    html += `
+      <div class="card" data-cat="${item.cat}" data-index="${idx}" data-search="${item.title.toLowerCase()} ${item.rows.map(r => r[0].toLowerCase() + ' ' + r[1].toLowerCase()).join(' ')}">
+        <div class="card-header">
+          <div class="card-title">${cat.emoji} ${item.title}</div>
+          <div class="card-category" style="${catStyle}">${cat.label}</div>
+        </div>
+        <div class="card-body">
+          <table>
+            <thead><tr><th>Question</th><th>Code</th></tr></thead>
+            <tbody>${tableRows}</tbody>
+          </table>
+        </div>
+      </div>`;
+  });
+
+  grid.innerHTML = html;
+  document.getElementById('totalCards').textContent = DATA.length;
+  updateVisibleCount();
+}
+
+function renderFilters() {
+  const row = document.getElementById('filterRow');
+  let html = '<button class="filter-btn active" data-filter="all">All</button>';
+  for (const [key, val] of Object.entries(CATEGORIES)) {
+    html += `<button class="filter-btn" data-filter="${key}">${val.emoji} ${val.label}</button>`;
+  }
+  row.innerHTML = html;
+}
+
+function renderQuickGuide() {
+  const grid = document.getElementById('quickGuideGrid');
+  let html = '';
+  QUICK_KEYWORDS.forEach(({ kw, action }) => {
+    html += `
+      <div class="quick-item">
+        <span class="quick-keyword">${kw}</span>
+        <span class="quick-arrow">→</span>
+        <span class="quick-action">${action}</span>
+      </div>`;
+  });
+  grid.innerHTML = html;
+}
+
+function updateVisibleCount() {
+  const cards = document.querySelectorAll('.card');
+  let count = 0;
+  cards.forEach(c => { if (!c.classList.contains('hidden')) count++; });
+  document.getElementById('visibleCards').textContent = count;
+
+  // Empty state
+  const grid = document.getElementById('cardGrid');
+  const existing = grid.querySelector('.empty-state');
+  if (existing) existing.remove();
+
+  if (count === 0) {
+    grid.insertAdjacentHTML('beforeend', `
+      <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <h3>No matching snippets</h3>
+        <p>Try a different search term or clear filters</p>
+      </div>`);
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   INTERACTIONS
+   ═══════════════════════════════════════════════ */
+
+let activeFilter = 'all';
+let searchTerm = '';
+
+function applyFilters() {
+  const cards = document.querySelectorAll('.card');
+  cards.forEach(card => {
+    const matchCat = activeFilter === 'all' || card.dataset.cat === activeFilter;
+    const matchSearch = !searchTerm || card.dataset.search.includes(searchTerm);
+    card.classList.toggle('hidden', !(matchCat && matchSearch));
+  });
+  updateVisibleCount();
+}
+
+// Filters
+document.getElementById('filterRow').addEventListener('click', e => {
+  const btn = e.target.closest('.filter-btn');
+  if (!btn) return;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeFilter = btn.dataset.filter;
+  applyFilters();
+});
+
+// Search
+const searchInput = document.getElementById('searchInput');
+const clearBtn = document.getElementById('clearSearch');
+
+searchInput.addEventListener('input', () => {
+  searchTerm = searchInput.value.toLowerCase().trim();
+  clearBtn.classList.toggle('visible', searchTerm.length > 0);
+  applyFilters();
+});
+
+clearBtn.addEventListener('click', () => {
+  searchInput.value = '';
+  searchTerm = '';
+  clearBtn.classList.remove('visible');
+  applyFilters();
+  searchInput.focus();
+});
+
+// ⌘K shortcut
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault();
+    searchInput.focus();
+    searchInput.select();
+  }
+  if (e.key === 'Escape' && document.activeElement === searchInput) {
+    searchInput.blur();
+  }
+});
+
+// Copy buttons
+document.getElementById('cardGrid').addEventListener('click', e => {
+  const btn = e.target.closest('.copy-btn');
+  if (!btn) return;
+  const code = decodeURIComponent(btn.dataset.code);
+  navigator.clipboard.writeText(code).then(() => {
+    btn.classList.add('copied');
+    btn.textContent = '✓';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.textContent = '📋';
+    }, 1500);
+  });
+});
+
+// Theme toggle
+const themeBtn = document.getElementById('themeToggle');
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  themeBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
+  localStorage.setItem('cs-theme', theme);
+  // Re-render cards to update category badge styles
+  renderCards();
+  applyFilters();
+}
+
+themeBtn.addEventListener('click', () => {
+  const current = document.documentElement.getAttribute('data-theme');
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+});
+
+// Init
+const savedTheme = localStorage.getItem('cs-theme') || 'dark';
+document.documentElement.setAttribute('data-theme', savedTheme);
+themeBtn.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+
+renderFilters();
+renderQuickGuide();
+renderCards();
+</script>
+</body>
+</html>
