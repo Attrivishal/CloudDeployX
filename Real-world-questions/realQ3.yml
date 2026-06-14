@@ -1,0 +1,33 @@
+name : Practice_YAML
+
+on : 
+  release : 
+    types : [published]
+
+jobs : 
+  build : 
+    runs-on : ubuntu-latest
+    steps :
+      - name : checkout code
+        uses : actions/checkout@v4
+      
+      - name : setup Node.Js 
+        uses : actions/setup-node@v4
+        with :
+          node-version : "18"
+          registry-url : "https://registry.npmjs.org/"
+      
+      - name : clean install
+        run : npm ci
+      
+      - name : run test
+        run : npm test 
+      
+      - name : run build 
+        run : npm run build 
+      
+      - name : publish to npm 
+        run : npm publish
+        env :
+          NODE_AUTH_TOKEN : ${{secrets.NPM_TOKEN}}
+      
