@@ -1,4 +1,4 @@
-# 🚀 CI/CD Master Cheat Sheet — GitHub Actions
+#  CI/CD Master Cheat Sheet — GitHub Actions
 
 > **The only reference you need.** Covers 95% of CI/CD questions.  
 > Part of the [CloudDeployX](./README.md) interactive lab.
@@ -653,12 +653,12 @@ jobs:
     needs: test
     if: github.ref == 'refs/heads/main'
     steps:
-      - run: echo "🚀 Deploying to production..."
+      - run: echo " Deploying to production..."
 ```
 
 ---
 
-## 🎯 Common Errors & Fixes
+##  Common Errors & Fixes
 
 | Error | Cause | Fix |
 |---|---|---|
