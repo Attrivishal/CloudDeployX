@@ -5,9 +5,11 @@
 
 ---
 
+
 ## 🧠 The 5 Universal Steps
 
 > Every CI/CD pipeline follows the same pattern. Memorize this:
+
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
