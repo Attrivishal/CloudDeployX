@@ -1,0 +1,45 @@
+name: "daily-backup-2:AM"
+
+on:
+  schedule:
+    - cron: '0 2 * * *'           
+
+env:
+  DB_HOST: ${{ secrets.DB_HOST }}
+  DB_USER: ${{ secrets.DB_USER }}
+  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+  DB_NAME: "production_db"
+  BACKUP_DIR: ./backup
+
+jobs:                              
+  backups:                         
+    runs-on: ubuntu-latest
+    
+    steps:                         
+      - name: install postgresql-client
+        run: |
+          sudo apt update
+          sudo apt install -y postgresql-client
+
+      - name: create backup file
+        run: |
+          mkdir -p ${{ env.BACKUP_DIR }}
+          PGPASSWORD=${{ secrets.DB_PASSWORD }} pg_dump \
+            -h ${{ secrets.DB_HOST }} \
+            -U ${{ secrets.DB_USER }} \
+            -d ${{ env.DB_NAME }} \
+            > ${{ env.BACKUP_DIR }}/backup_$(date +%Y%m%d_%H%M%S).sql
+
+      - name: configure aws with credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:                     
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: upload to s3
+        run: |
+          aws s3 sync ${{ env.BACKUP_DIR }}/ s3://${{ secrets.S3_BUCKET }}/backups/
+
+      - name: Clean up local files
+        run: rm -rf ${{ env.BACKUP_DIR }}
