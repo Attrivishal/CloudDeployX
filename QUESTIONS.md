@@ -291,3 +291,29 @@ Configure AWS credentials using secrets
 Sync build/ folder to S3 bucket my-website-bucket
 Invalidate CloudFront cache (optional)
 ```
+
+### Q22
+```yaml
+🔄 Real-Life Question 5: Scheduled Workflow (Cron)
+
+Scenario: Your database needs a daily backup at 2 AM every day.
+
+Requirements:
+
+Trigger: schedule using cron 0 2 * * *
+Job: backup
+Runs on ubuntu-latest
+Environment variables:
+
+DB_HOST (secret)
+DB_USER (secret)
+DB_PASSWORD (secret)
+DB_NAME = "production_db"
+Steps:
+
+Install postgresql-client
+Run pg_dump to create backup file
+Compress backup with gzip
+Upload to AWS S3 (or GitHub Artifacts)
+Delete backups older than 30 days
+```
