@@ -58,7 +58,7 @@ function deepGet(obj, pathArray) {
 }
 
 // Helper function to validate any YAML file (for realQ files)
-function validateBasicYAML(data, filename) {
+function validateBasicYAML(data) {
   if (!data) return "File is empty or invalid YAML";
   if (typeof data !== 'object') return "File must contain valid YAML structure";
   return true;
@@ -906,13 +906,13 @@ const githubActionsTests = {
   'realQ.yml': {
     name: '📁 Custom Practice Workflow 1',
     validate: (data) => {
-      return validateBasicYAML(data, 'realQ.yml');
+      return validateBasicYAML(data);
     }
   },
   'realQ2.yml': {
     name: '📁 Custom Practice Workflow 2',
     validate: (data) => {
-      return validateBasicYAML(data, 'realQ2.yml');
+      return validateBasicYAML(data);
     }
   }
 };
@@ -1021,7 +1021,7 @@ function runGrader() {
   console.log(`\n${styles.bold}${styles.cyan}📁 All YAML files in Real-world-questions:${styles.reset}`);
   console.log(`${styles.dim}─────────────────────────────────────────────────────────────────${styles.reset}`);
   const allFiles = fs.readdirSync(realQDir).filter(f => f.endsWith('.yml'));
-  allFiles.forEach((file, idx) => {
+  allFiles.forEach(file => {
     const isInTests = githubActionsTests[file];
     const status = isInTests ? `${styles.green}✓${styles.reset}` : `${styles.dim}○${styles.reset}`;
     const icon = isInTests ? '' : ' (custom - basic validation only)';
