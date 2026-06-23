@@ -1,7 +1,7 @@
 const http = require('http');
 
 const server = http.createServer((req, res) => {
-    res.end("CloudDeployX CI/CD is working..");
+    res.end("CloudDeployX CI/CD is working 🚀");
 });
 
 if (require.main === module) {
