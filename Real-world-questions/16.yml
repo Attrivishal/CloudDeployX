@@ -1,4 +1,6 @@
   Name : Yaml-Practice
 
   on: 
-    build: 
+    push :
+      branche:
+        - main
